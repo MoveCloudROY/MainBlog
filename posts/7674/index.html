@@ -1,1 +1,1287 @@
-<!-- build time:Mon Mar 16 2020 15:40:01 GMT+0800 (GMT+08:00) --><!DOCTYPE html><html lang="zh"><head><meta name="generator" content="Hexo 3.9.0"><meta charset="utf-8"><title>Segment Tree (PART ONE) - 「Mark Life」</title><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="description" content="概念线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。"><meta name="keywords" content="数据结构,模版,线段树"><meta property="og:type" content="article"><meta property="og:title" content="Segment Tree (PART ONE)"><meta property="og:url" content="http://www.movecloud.xyz/posts/7674/index.html"><meta property="og:site_name" content="「Mark Life」"><meta property="og:description" content="概念线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。"><meta property="og:locale" content="zh-CN"><meta property="og:image" content="http://www.movecloud.xyz/images/og_image.png"><meta property="og:updated_time" content="2018-11-03T02:13:14.000Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Segment Tree (PART ONE)"><meta name="twitter:description" content="概念线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。"><meta name="twitter:image" content="http://www.movecloud.xyz/images/og_image.png"><link rel="icon" href="/images/favicon.svg"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.7.2/css/bulma.css"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu:400,600|Source+Code+Pro"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.css"><link rel="stylesheet" href="/css/back-to-top.css"><link rel="stylesheet" href="/css/progressbar.css"><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script><link rel="stylesheet" href="/css/style.css"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand is-flex-center"><a class="navbar-item navbar-logo" href="/"><img src="/images/logo.svg" alt="Segment Tree (PART ONE)" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a> <a class="navbar-item" href="/archives">Archives</a> <a class="navbar-item" href="/categories">Categories</a> <a class="navbar-item" href="/tags">Tags</a> <a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column is-8-tablet is-8-desktop is-6-widescreen has-order-2 column-main"><div class="card"><div class="card-content article"><div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto"><div class="level-left"><time class="level-item has-text-grey" datetime="2018-07-26T00:42:05.000Z">2018-07-26</time> <span class="level-item has-text-grey">8 分钟 读完 (大约 1261 个字)</span></div></div><h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">Segment Tree (PART ONE)</h1><div class="content"><h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><blockquote><p>线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。</p></blockquote><a id="more"></a><h1 id="操作"><a href="#操作" class="headerlink" title="操作"></a>操作</h1><p>下面我们从一个经典的例子来了解线段树</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">从数组arr[<span class="hljs-number">0.</span>..n<span class="hljs-number">-1</span>]中查找某个数组某个区间内的最小值，</span><br><span class="line">其中数组大小固定，但是数组中的元素的值可以随时更新。</span><br></pre></td></tr></table></figure><p>我们可以用线段树来解决这个问题：预处理耗时$O(n)$，查询、更新操作$O(logn)$，需要额外的空间$O(n)$。根据这个问题我们构造如下的二叉树 - 叶子节点是原始组数arr中的元素 - 非叶子节点代表它的所有子孙叶子节点所在区间的最小值 例如对于数组[2, 5, 1, 4, 9, 3]可以构造如下的二叉树（背景为白色表示叶子节点，非叶子节点的值是其对应数组区间内的最小值，例如根节点表示数组区间arr[0…5]内的最小值是1）： <img src="https://images0.cnblogs.com/blog/517264/201312/01204058-426dce8b8a05491b91edeba9ec2e4112.jpg" alt></p><p>由于线段树的父节点区间是平均分割到左右子树，因此线段树是完全二叉树，对于包含$n$个叶子节点的完全二叉树，它一定有$n-1$个非叶节点，总共$2n-1$个节点，因此存储线段是需要的空间复杂度是$O(n)$</p><h1 id="创建线段树"><a href="#创建线段树" class="headerlink" title="创建线段树"></a>创建线段树</h1><h2 id="子节点"><a href="#子节点" class="headerlink" title="子节点"></a>子节点</h2><p>根据线段树的性质（完全二叉树），只需知道父节点，就可以计算出子节点的序号</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> LL <span class="hljs-title">getLeftNum</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">return</span> p&lt;&lt;<span class="hljs-number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> LL <span class="hljs-title">getRightNum</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">return</span> p&lt;&lt;<span class="hljs-number">1</span>|<span class="hljs-number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="树的存放和节点信息"><a href="#树的存放和节点信息" class="headerlink" title="树的存放和节点信息"></a>树的存放和节点信息</h2><p>首先，我们需要判断我们需要维护的对象，可以是一个<strong>值</strong>，也可以是<strong>颜色</strong>，<strong>状态</strong>等</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-class"><span class="hljs-keyword">struct</span></span></span><br><span class="line"><span class="hljs-class">&#123;</span></span><br><span class="line">    <span class="hljs-keyword">int</span> val;<span class="hljs-comment">//可以添加col,status，lztag</span></span><br><span class="line">&#125;Tree[N];</span><br></pre></td></tr></table></figure><h2 id="建树操作"><a href="#建树操作" class="headerlink" title="建树操作"></a>建树操作</h2><p>我们使用递归操作来建树</p><blockquote><ul><li>当左端点和右段点相同时，意味着此时的$p$节点是叶子节点</li><li>二分当前区间，递归建树</li></ul></blockquote><p>注意，这里有两个尚未出现的东西，$pushup$函数和$lztag$标记</p><p>$pushup$函数用于从子节点向上依次更新父节点的值 而$lztag$是用于区间修改的懒标记</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">buildTree</span><span class="hljs-params">(LL p,LL l,LL r)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    lztag[p]=<span class="hljs-number">0</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(l==r) &#123;Tree[p]=a[l];<span class="hljs-keyword">return</span> ;&#125;</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    buildTree(getLeftNum(p),l,mid);</span><br><span class="line">    buildTree(getRightNum(p),mid+<span class="hljs-number">1</span>,r);</span><br><span class="line">    pushup(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="pushup-操作"><a href="#pushup-操作" class="headerlink" title="pushup 操作"></a>pushup 操作</h2><p>$pushup$起到更新的作用，对于不同的需求，有不同的$pushup$操作</p><p>对于求和，可以这么写</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">pushup</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    Tree[p]=Tree[getLeftNum(p)]+Tree[getRightNum(p)]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>而对于求 最大值/最小值 ，则可以这么写</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put_up</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    Tree[p]=max(Tree[getLeftNum(p)],Tree[getRightNum(p)]);</span><br><span class="line">    <span class="hljs-comment">//Tree[p]=min(Tree[getLeftNum(p)],Tree[getRightNum(p)]);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="更新操作"><a href="#更新操作" class="headerlink" title="更新操作"></a>更新操作</h2><p>更新操作可以分为两种 * 单点操作 * 区间操作</p><h3 id="单点操作（updataPot）"><a href="#单点操作（updataPot）" class="headerlink" title="单点操作（updataPot）"></a>单点操作（updataPot）</h3><p>明确变量名： 1. （l ~ r） —— 可支配区间 2. （nedChangeL ~ nedChangeR） —— 需操作区间 3. mid —— 可支配区间中点</p><p>注 :</p><blockquote><ul><li>当$mid$不小于$nedChangeL$时 代表去 $l$ ~ $mid$ 更新是有意义的，所以，我们选择更新该区间</li><li>$mid$和$nedChangeR$同理</li></ul></blockquote><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">updataPot</span><span class="hljs-params">(LL nedChangeL,LL nedChangeR,LL l,LL r,LL p,LL num)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">if</span>(l==r) &#123;Tree[p]=num;<span class="hljs-keyword">return</span> ;&#125;</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(nedChangeL&lt;=mid) updata(nedChangeL,nedChangeR,l,mid,getLeftNum(p),num);</span><br><span class="line">    <span class="hljs-keyword">if</span>(nedChangeR&gt;mid) updata(nedChangeL,nedChangeR,mid+<span class="hljs-number">1</span>,r,getRightNum(p),num);</span><br><span class="line">    put_up(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h3 id="区间操作（updataInterval）"><a href="#区间操作（updataInterval）" class="headerlink" title="区间操作（updataInterval）"></a>区间操作（updataInterval）</h3><h1 id="区间操作需要引入一个概念"><a href="#区间操作需要引入一个概念" class="headerlink" title="区间操作需要引入一个概念"></a>区间操作需要引入一个概念</h1><blockquote><p>$lazytag$ : $lazytag$标注的是线段树中每个树的变化量，即 $\Delta$</p><p>$lazytag$ 操作时正如其名，只对目前状态打上标记，等到更新时，才向下传递 因此，引入另一个函数$pushdown$，用于更新其子节点的$lazytag$和本节点的数值</p></blockquote><p>接下来给出$pushdown$的代码</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">updataSum</span><span class="hljs-params">(LL p,LL l,LL r,LL num)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    lztag[p]=lztag[p]+num;</span><br><span class="line">    Tree[p]+=num*(r-l+<span class="hljs-number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put_down</span><span class="hljs-params">(LL p,LL l,LL r)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    updataSum(getLeftNum(p),l,mid,lztag[p]);</span><br><span class="line">    updataSum(getRightNum(p),mid+<span class="hljs-number">1</span>,r,lztag[p]);</span><br><span class="line">    lztag[p]=<span class="hljs-number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>有了$pushdown$算法，我们可以完成$updata$操作</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">updataInterval</span><span class="hljs-params">(LL needChangeL,LL needChangeR,LL l,LL r,LL p,LL num)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">if</span>(needChangeL&lt;=l&amp;&amp;r&lt;=needChangeR) &#123;updataSum(p,l,r,num);<span class="hljs-keyword">return</span> ;&#125;</span><br><span class="line">    put_down(p,l,r);</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(needChangeL&lt;=mid) updata(needChangeL,needChangeR,l,mid,getLeftNum(p),num);</span><br><span class="line">    <span class="hljs-keyword">if</span>(needChangeR&gt;mid) updata(needChangeL,needChangeR,mid+<span class="hljs-number">1</span>,r,getRightNum(p),num);</span><br><span class="line">    put_up(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="区间求值（query）"><a href="#区间求值（query）" class="headerlink" title="区间求值（query）"></a>区间求值（query）</h2><p>区间求值时，我们进行了询问，而因为$lazytag$的原因，在求值之前，需先进行$pushdown$操作</p><figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function">LL <span class="hljs-title">getSum</span><span class="hljs-params">(LL qx,LL qy,LL l,LL r,LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    LL sum=<span class="hljs-number">0</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(qx&lt;=l&amp;&amp;r&lt;=qy)<span class="hljs-keyword">return</span> Tree[p];</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    put_down(p,l,r);</span><br><span class="line">    <span class="hljs-keyword">if</span>(qx&lt;=mid)sum+=getSum(qx,qy,l,mid,getLeftNum(p));</span><br><span class="line">    <span class="hljs-keyword">if</span>(qy&gt;mid) sum+=getSum(qx,qy,mid+<span class="hljs-number">1</span>,r,getRightNum(p));</span><br><span class="line">    <span class="hljs-keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h1 id="END"><a href="#END" class="headerlink" title="END"></a>END</h1></div><div class="level is-size-7 is-uppercase"><div class="level-start"><div class="level-item"><span class="is-size-6 has-text-grey has-mr-7">#</span> <a class="has-link-grey -link" href="/tags/数据结构/">数据结构</a>, <a class="has-link-grey -link" href="/tags/模版/">模版</a>, <a class="has-link-grey -link" href="/tags/线段树/">线段树</a></div></div></div></div></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">喜欢这篇文章？打赏一下作者吧</h3><div class="buttons is-centered"><div class="notification is-danger">You forgot to set the <code>qrcode</code> for Alipay. Please set it in <code>_config.yml</code>.</div></div></div></div><div class="card card-transparent"><div class="level post-navigation is-flex-wrap is-mobile"><div class="level-start"><a class="level level-item has-link-grey article-nav-prev" href="/posts/30408/"><i class="level-item fas fa-chevron-left"></i> <span class="level-item">Segment Tree(ZKW)(PART TWO)</span></a></div><div class="level-end"><a class="level level-item has-link-grey article-nav-next" href="/posts/57313/"><span class="level-item">最小生成树</span> <i class="level-item fas fa-chevron-right"></i></a></div></div></div></div><div class="column is-4-tablet is-4-desktop is-3-widescreen has-order-1 column-left"><div class="card widget"><div class="card-content"><nav class="level"><div class="level-item has-text-centered" style="flex-shrink:1"><div><img class="image is-128x128 has-mb-6" src="/images/avatar.png" alt="MoveCloud"><p class="is-size-4 is-block">MoveCloud</p><p class="is-size-6 is-block">「Mark Life」</p><p class="is-size-6 is-flex is-flex-center has-text-grey"><i class="fas fa-map-marker-alt has-mr-7"></i> <span>浙江 温州</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">文章</p><p class="title has-text-weight-normal">13</p></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">分类</p><p class="title has-text-weight-normal">0</p></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">标签</p><p class="title has-text-weight-normal">16</p></div></div></nav><div class="level"><a class="level-item button is-link is-rounded" href="https://github.com/movecloudroy" target="_blank">关注我</a></div><div class="level is-mobile"><a class="level-item button is-white is-marginless" target="_blank" title="Github" href="https://github.com/movecloudroy"><i class="fab fa-github"></i> </a><a class="level-item button is-white is-marginless" target="_blank" title="RSS" href="/"><i class="fas fa-rss"></i></a></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">链接</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://hexo.io" target="_blank"><span class="level-left"><span class="level-item">Hexo</span> </span><span class="level-right"><span class="level-item tag">hexo.io</span></span></a></li><li><a class="level is-mobile" href="https://github.com/movecloudroy" target="_blank"><span class="level-left"><span class="level-item">MoveCloud</span> </span><span class="level-right"><span class="level-item tag">github.com</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">分类</h3><ul class="menu-list"></ul></div></div></div><div class="card widget"><div class="card-content"><h3 class="menu-label">标签云</h3><a href="/tags/AI/" style="font-size:10px">AI</a> <a href="/tags/FHQ/" style="font-size:10px">FHQ</a> <a href="/tags/GAN/" style="font-size:10px">GAN</a> <a href="/tags/STL/" style="font-size:10px">STL</a> <a href="/tags/ZKW/" style="font-size:10px">ZKW</a> <a href="/tags/分块/" style="font-size:10px">分块</a> <a href="/tags/平衡树/" style="font-size:10px">平衡树</a> <a href="/tags/数据结构/" style="font-size:20px">数据结构</a> <a href="/tags/数论/" style="font-size:10px">数论</a> <a href="/tags/暴力/" style="font-size:10px">暴力</a> <a href="/tags/最小生成树/" style="font-size:10px">最小生成树</a> <a href="/tags/模版/" style="font-size:20px">模版</a> <a href="/tags/线段树/" style="font-size:15px">线段树</a> <a href="/tags/经验/" style="font-size:15px">经验</a> <a href="/tags/英语/" style="font-size:10px">英语</a> <a href="/tags/题解/" style="font-size:15px">题解</a></div></div><div class="column-right-shadow is-hidden-widescreen"><div class="card widget"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><a href="/posts/683983/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="英语语法"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2020-03-16T06:30:45.000Z">2020-03-16</time></div><a href="/posts/683983/" class="has-link-black-ter is-size-6">英语语法</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/1243066710/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="Hello World"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-07-05T15:36:25.177Z">2019-07-05</time></div><a href="/posts/1243066710/" class="has-link-black-ter is-size-6">Hello World</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/10000/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="CycleGAN"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-03-14T09:12:58.000Z">2019-03-14</time></div><a href="/posts/10000/" class="has-link-black-ter is-size-6">CycleGAN</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/1138517949/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="树的直径-题解"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-11-01T05:18:01.000Z">2018-11-01</time></div><a href="/posts/1138517949/" class="has-link-black-ter is-size-6">树的直径-题解</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/2952530072/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="树上差分-题解"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-10-31T23:52:39.000Z">2018-11-01</time></div><a href="/posts/2952530072/" class="has-link-black-ter is-size-6">树上差分-题解</a><p class="is-size-7 is-uppercase"></p></div></div></article></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">归档</h3><ul class="menu-list"><li><a class="level is-marginless" href="/archives/2020/03/"><span class="level-start"><span class="level-item">三月 2020</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2019/07/"><span class="level-start"><span class="level-item">七月 2019</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2019/03/"><span class="level-start"><span class="level-item">三月 2019</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/11/"><span class="level-start"><span class="level-item">十一月 2018</span> </span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/09/"><span class="level-start"><span class="level-item">九月 2018</span> </span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/08/"><span class="level-start"><span class="level-item">八月 2018</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/07/"><span class="level-start"><span class="level-item">七月 2018</span> </span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/AI/"><span class="tag">AI</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/FHQ/"><span class="tag">FHQ</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/GAN/"><span class="tag">GAN</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/STL/"><span class="tag">STL</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/ZKW/"><span class="tag">ZKW</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/分块/"><span class="tag">分块</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/平衡树/"><span class="tag">平衡树</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/数据结构/"><span class="tag">数据结构</span> <span class="tag is-grey">5</span></a></div><div class="control"><a class="tags has-addons" href="/tags/数论/"><span class="tag">数论</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/暴力/"><span class="tag">暴力</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/最小生成树/"><span class="tag">最小生成树</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/模版/"><span class="tag">模版</span> <span class="tag is-grey">5</span></a></div><div class="control"><a class="tags has-addons" href="/tags/线段树/"><span class="tag">线段树</span> <span class="tag is-grey">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/经验/"><span class="tag">经验</span> <span class="tag is-grey">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/英语/"><span class="tag">英语</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/题解/"><span class="tag">题解</span> <span class="tag is-grey">2</span></a></div></div></div></div></div></div></div><div class="column is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only has-order-3 column-right"><div class="card widget"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><a href="/posts/683983/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="英语语法"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2020-03-16T06:30:45.000Z">2020-03-16</time></div><a href="/posts/683983/" class="has-link-black-ter is-size-6">英语语法</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/1243066710/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="Hello World"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-07-05T15:36:25.177Z">2019-07-05</time></div><a href="/posts/1243066710/" class="has-link-black-ter is-size-6">Hello World</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/10000/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="CycleGAN"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-03-14T09:12:58.000Z">2019-03-14</time></div><a href="/posts/10000/" class="has-link-black-ter is-size-6">CycleGAN</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/1138517949/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="树的直径-题解"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-11-01T05:18:01.000Z">2018-11-01</time></div><a href="/posts/1138517949/" class="has-link-black-ter is-size-6">树的直径-题解</a><p class="is-size-7 is-uppercase"></p></div></div></article><article class="media"><a href="/posts/2952530072/" class="media-left"><p class="image is-64x64"><img class="thumbnail" src="/images/thumbnail.svg" alt="树上差分-题解"></p></a><div class="media-content"><div class="content"><div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-10-31T23:52:39.000Z">2018-11-01</time></div><a href="/posts/2952530072/" class="has-link-black-ter is-size-6">树上差分-题解</a><p class="is-size-7 is-uppercase"></p></div></div></article></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">归档</h3><ul class="menu-list"><li><a class="level is-marginless" href="/archives/2020/03/"><span class="level-start"><span class="level-item">三月 2020</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2019/07/"><span class="level-start"><span class="level-item">七月 2019</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2019/03/"><span class="level-start"><span class="level-item">三月 2019</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/11/"><span class="level-start"><span class="level-item">十一月 2018</span> </span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/09/"><span class="level-start"><span class="level-item">九月 2018</span> </span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/08/"><span class="level-start"><span class="level-item">八月 2018</span> </span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-marginless" href="/archives/2018/07/"><span class="level-start"><span class="level-item">七月 2018</span> </span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/AI/"><span class="tag">AI</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/FHQ/"><span class="tag">FHQ</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/GAN/"><span class="tag">GAN</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/STL/"><span class="tag">STL</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/ZKW/"><span class="tag">ZKW</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/分块/"><span class="tag">分块</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/平衡树/"><span class="tag">平衡树</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/数据结构/"><span class="tag">数据结构</span> <span class="tag is-grey">5</span></a></div><div class="control"><a class="tags has-addons" href="/tags/数论/"><span class="tag">数论</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/暴力/"><span class="tag">暴力</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/最小生成树/"><span class="tag">最小生成树</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/模版/"><span class="tag">模版</span> <span class="tag is-grey">5</span></a></div><div class="control"><a class="tags has-addons" href="/tags/线段树/"><span class="tag">线段树</span> <span class="tag is-grey">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/经验/"><span class="tag">经验</span> <span class="tag is-grey">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/英语/"><span class="tag">英语</span> <span class="tag is-grey">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/题解/"><span class="tag">题解</span> <span class="tag is-grey">2</span></a></div></div></div></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start has-text-centered-mobile"><a class="footer-logo is-block has-mb-6" href="/"><img src="/images/logo.svg" alt="Segment Tree (PART ONE)" height="28"></a><p class="is-size-7">&copy; 2020 ROY1994&nbsp; Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank">Icarus</a></p></div><div class="level-end"><div class="field has-addons is-flex-center-mobile has-mt-5-mobile is-flex-wrap is-flex-middle"><p class="control"><a class="button is-white is-large" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-white is-large" target="_blank" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-white is-large" target="_blank" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script>moment.locale("zh-CN")</script><script src="/js/animation.js"></script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script src="/js/gallery.js" defer></script><div id="outdated"><h6>Your browser is out-of-date!</h6><p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/">Update my browser now</a></p><p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p></div><script src="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.js" defer></script><script>document.addEventListener("DOMContentLoaded",function(){outdatedBrowser({bgColor:"#f25648",color:"#ffffff",lowerThan:"flex"})})</script><script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.5/unpacked/MathJax.js?config=TeX-MML-AM_CHTML" defer></script><script>document.addEventListener("DOMContentLoaded",function(){MathJax.Hub.Config({"HTML-CSS":{matchFontHeight:!1},SVG:{matchFontHeight:!1},CommonHTML:{matchFontHeight:!1},tex2jax:{inlineMath:[["$","$"],["\\(","\\)"]]}})})</script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back-to-top.js" defer></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script src="/js/clipboard.js" defer></script><script src="/js/main.js" defer></script><div class="searchbox ins-search"><div class="searchbox-container ins-search-container"><div class="searchbox-input-wrapper"><input type="text" class="searchbox-input ins-search-input" placeholder="想要查找什么..."> <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span></div><div class="searchbox-result-wrapper ins-section-wrapper"><div class="ins-section-container"></div></div></div></div><script>!function(T){var N={TRANSLATION:{POSTS:"文章",PAGES:"页面",CATEGORIES:"分类",TAGS:"标签",UNTITLED:"(无标题)"},CONTENT_URL:"/content.json"};T.INSIGHT_CONFIG=N}(window)</script><script src="/js/insight.js" defer></script><link rel="stylesheet" href="/css/search.css"><link rel="stylesheet" href="/css/insight.css"><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({pluginRootPath:"live2dw/",pluginJsPath:"lib/",pluginModelPath:"assets/",tagMode:!1,debug:!1,model:{jsonPath:"live2d-widget-model-wanko"},display:{position:"right",width:150,height:300},mobile:{show:!1},log:!1})</script></body></html><!-- rebuild by neat -->
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta name="generator" content="Hexo 3.9.0">
+    <meta charset="utf-8">
+<title>Segment Tree (PART ONE) - 「Mark Life」</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+    <meta name="description" content="概念 线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。">
+<meta name="keywords" content="数据结构,模版,线段树">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Segment Tree (PART ONE)">
+<meta property="og:url" content="http://www.movecloud.xyz/posts/7674/index.html">
+<meta property="og:site_name" content="「Mark Life」">
+<meta property="og:description" content="概念 线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.movecloud.xyz/images/og_image.png">
+<meta property="og:updated_time" content="2018-11-03T02:13:14.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Segment Tree (PART ONE)">
+<meta name="twitter:description" content="概念 线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。">
+<meta name="twitter:image" content="http://www.movecloud.xyz/images/og_image.png">
+
+
+
+
+
+
+
+<link rel="icon" href="/images/favicon.svg">
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.7.2/css/bulma.css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.1/css/all.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu:400,600|Source+Code+Pro">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css">
+
+
+    
+    
+    
+    <style>body>.footer,body>.navbar,body>.section{opacity:0}</style>
+    
+
+    
+    
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css">
+    
+
+    
+    
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.css">
+
+
+    
+    
+    
+    
+
+<link rel="stylesheet" href="/css/back-to-top.css">
+
+
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+<link rel="stylesheet" href="/css/progressbar.css">
+<script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+
+    
+    
+    
+
+    
+    
+    
+
+
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="is-3-column">
+    <nav class="navbar navbar-main">
+    <div class="container">
+        <div class="navbar-brand is-flex-center">
+            <a class="navbar-item navbar-logo" href="/">
+            
+                <img src="/images/logo.svg" alt="Segment Tree (PART ONE)" height="28">
+            
+            </a>
+        </div>
+        <div class="navbar-menu">
+            
+            <div class="navbar-start">
+                
+                <a class="navbar-item" href="/">Home</a>
+                
+                <a class="navbar-item" href="/archives">Archives</a>
+                
+                <a class="navbar-item" href="/categories">Categories</a>
+                
+                <a class="navbar-item" href="/tags">Tags</a>
+                
+                <a class="navbar-item" href="/about">About</a>
+                
+            </div>
+            
+            <div class="navbar-end">
+                
+                
+                
+                <a class="navbar-item search" title="搜索" href="javascript:;">
+                    <i class="fas fa-search"></i>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</nav>
+    
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <div class="column is-8-tablet is-8-desktop is-6-widescreen has-order-2 column-main"><div class="card">
+    
+    <div class="card-content article ">
+        
+        <div class="level article-meta is-size-7 is-uppercase is-mobile is-overflow-x-auto">
+            <div class="level-left">
+                <time class="level-item has-text-grey" datetime="2018-07-26T00:42:05.000Z">2018-07-26</time>
+                
+                
+                <span class="level-item has-text-grey">
+                    
+                    
+                    8 分钟 读完 (大约 1261 个字)
+                </span>
+                
+                
+            </div>
+        </div>
+        
+        <h1 class="title is-size-3 is-size-4-mobile has-text-weight-normal">
+            
+                Segment Tree (PART ONE)
+            
+        </h1>
+        <div class="content">
+            <h1 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h1><blockquote>
+<p>线段树，类似区间树，它在各个节点保存一条线段（数组中的一段子数组），主要用于高效解决连续区间的动态查询问题，由于二叉结构的特性，它基本能保持每个操作的复杂度为$O(logn)$。</p>
+</blockquote>
+<a id="more"></a>
+
+<h1 id="操作"><a href="#操作" class="headerlink" title="操作"></a>操作</h1><p>下面我们从一个经典的例子来了解线段树</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">从数组arr[<span class="hljs-number">0.</span>..n<span class="hljs-number">-1</span>]中查找某个数组某个区间内的最小值，</span><br><span class="line">其中数组大小固定，但是数组中的元素的值可以随时更新。</span><br></pre></td></tr></table></figure>
+
+<p>我们可以用线段树来解决这个问题：预处理耗时$O(n)$，查询、更新操作$O(logn)$，需要额外的空间$O(n)$。根据这个问题我们构造如下的二叉树
+- 叶子节点是原始组数arr中的元素
+- 非叶子节点代表它的所有子孙叶子节点所在区间的最小值
+例如对于数组[2, 5, 1, 4, 9, 3]可以构造如下的二叉树（背景为白色表示叶子节点，非叶子节点的值是其对应数组区间内的最小值，例如根节点表示数组区间arr[0…5]内的最小值是1）：
+<img src="https://images0.cnblogs.com/blog/517264/201312/01204058-426dce8b8a05491b91edeba9ec2e4112.jpg" alt></p>
+<p>由于线段树的父节点区间是平均分割到左右子树，因此线段树是完全二叉树，对于包含$n$个叶子节点的完全二叉树，它一定有$n-1$个非叶节点，总共$2n-1$个节点，因此存储线段是需要的空间复杂度是$O(n)$</p>
+<h1 id="创建线段树"><a href="#创建线段树" class="headerlink" title="创建线段树"></a>创建线段树</h1><h2 id="子节点"><a href="#子节点" class="headerlink" title="子节点"></a>子节点</h2><p>根据线段树的性质（完全二叉树），只需知道父节点，就可以计算出子节点的序号</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> LL <span class="hljs-title">getLeftNum</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">return</span> p&lt;&lt;<span class="hljs-number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> LL <span class="hljs-title">getRightNum</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">return</span> p&lt;&lt;<span class="hljs-number">1</span>|<span class="hljs-number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="树的存放和节点信息"><a href="#树的存放和节点信息" class="headerlink" title="树的存放和节点信息"></a>树的存放和节点信息</h2><p>首先，我们需要判断我们需要维护的对象，可以是一个<strong>值</strong>，也可以是<strong>颜色</strong>，<strong>状态</strong>等</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-class"><span class="hljs-keyword">struct</span></span></span><br><span class="line"><span class="hljs-class">&#123;</span></span><br><span class="line">    <span class="hljs-keyword">int</span> val;<span class="hljs-comment">//可以添加col,status，lztag</span></span><br><span class="line">&#125;Tree[N];</span><br></pre></td></tr></table></figure>
+
+<h2 id="建树操作"><a href="#建树操作" class="headerlink" title="建树操作"></a>建树操作</h2><p>我们使用递归操作来建树</p>
+<blockquote>
+<ul>
+<li>当左端点和右段点相同时，意味着此时的$p$节点是叶子节点</li>
+<li>二分当前区间，递归建树</li>
+</ul>
+</blockquote>
+<p>注意，这里有两个尚未出现的东西，$pushup$函数和$lztag$标记</p>
+<p>$pushup$函数用于从子节点向上依次更新父节点的值
+而$lztag$是用于区间修改的懒标记</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">buildTree</span><span class="hljs-params">(LL p,LL l,LL r)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    lztag[p]=<span class="hljs-number">0</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(l==r) &#123;Tree[p]=a[l];<span class="hljs-keyword">return</span> ;&#125;</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    buildTree(getLeftNum(p),l,mid);</span><br><span class="line">    buildTree(getRightNum(p),mid+<span class="hljs-number">1</span>,r);</span><br><span class="line">    pushup(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="pushup-操作"><a href="#pushup-操作" class="headerlink" title="pushup 操作"></a>pushup 操作</h2><p>$pushup$起到更新的作用，对于不同的需求，有不同的$pushup$操作</p>
+<p>对于求和，可以这么写</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">pushup</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    Tree[p]=Tree[getLeftNum(p)]+Tree[getRightNum(p)]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而对于求 最大值/最小值 ，则可以这么写</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put_up</span><span class="hljs-params">(LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    Tree[p]=max(Tree[getLeftNum(p)],Tree[getRightNum(p)]);</span><br><span class="line">    <span class="hljs-comment">//Tree[p]=min(Tree[getLeftNum(p)],Tree[getRightNum(p)]);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="更新操作"><a href="#更新操作" class="headerlink" title="更新操作"></a>更新操作</h2><p>更新操作可以分为两种
+* 单点操作
+* 区间操作</p>
+<h3 id="单点操作（updataPot）"><a href="#单点操作（updataPot）" class="headerlink" title="单点操作（updataPot）"></a>单点操作（updataPot）</h3><p>明确变量名：
+1. （l ~ r） ——  可支配区间
+2. （nedChangeL ~ nedChangeR） ——  需操作区间
+3.  mid —— 可支配区间中点</p>
+<p>注 :</p>
+<blockquote>
+<ul>
+<li>当$mid$不小于$nedChangeL$时 代表去 $l$ ~ $mid$ 更新是有意义的，所以，我们选择更新该区间</li>
+<li>$mid$和$nedChangeR$同理</li>
+</ul>
+</blockquote>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">updataPot</span><span class="hljs-params">(LL nedChangeL,LL nedChangeR,LL l,LL r,LL p,LL num)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">if</span>(l==r) &#123;Tree[p]=num;<span class="hljs-keyword">return</span> ;&#125;</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(nedChangeL&lt;=mid) updata(nedChangeL,nedChangeR,l,mid,getLeftNum(p),num);</span><br><span class="line">    <span class="hljs-keyword">if</span>(nedChangeR&gt;mid) updata(nedChangeL,nedChangeR,mid+<span class="hljs-number">1</span>,r,getRightNum(p),num);</span><br><span class="line">    put_up(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="区间操作（updataInterval）"><a href="#区间操作（updataInterval）" class="headerlink" title="区间操作（updataInterval）"></a>区间操作（updataInterval）</h3><h1 id="区间操作需要引入一个概念"><a href="#区间操作需要引入一个概念" class="headerlink" title="区间操作需要引入一个概念"></a>区间操作需要引入一个概念</h1><blockquote>
+<p>$lazytag$ :
+$lazytag$标注的是线段树中每个树的变化量，即 $\Delta$ </p>
+<p>$lazytag$ 操作时正如其名，只对目前状态打上标记，等到更新时，才向下传递
+因此，引入另一个函数$pushdown$，用于更新其子节点的$lazytag$和本节点的数值</p>
+</blockquote>
+<p>接下来给出$pushdown$的代码</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">updataSum</span><span class="hljs-params">(LL p,LL l,LL r,LL num)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    lztag[p]=lztag[p]+num;</span><br><span class="line">    Tree[p]+=num*(r-l+<span class="hljs-number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">void</span> <span class="hljs-title">put_down</span><span class="hljs-params">(LL p,LL l,LL r)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    updataSum(getLeftNum(p),l,mid,lztag[p]);</span><br><span class="line">    updataSum(getRightNum(p),mid+<span class="hljs-number">1</span>,r,lztag[p]);</span><br><span class="line">    lztag[p]=<span class="hljs-number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有了$pushdown$算法，我们可以完成$updata$操作</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">updataInterval</span><span class="hljs-params">(LL needChangeL,LL needChangeR,LL l,LL r,LL p,LL num)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    <span class="hljs-keyword">if</span>(needChangeL&lt;=l&amp;&amp;r&lt;=needChangeR) &#123;updataSum(p,l,r,num);<span class="hljs-keyword">return</span> ;&#125;</span><br><span class="line">    put_down(p,l,r);</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(needChangeL&lt;=mid) updata(needChangeL,needChangeR,l,mid,getLeftNum(p),num);</span><br><span class="line">    <span class="hljs-keyword">if</span>(needChangeR&gt;mid) updata(needChangeL,needChangeR,mid+<span class="hljs-number">1</span>,r,getRightNum(p),num);</span><br><span class="line">    put_up(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="区间求值（query）"><a href="#区间求值（query）" class="headerlink" title="区间求值（query）"></a>区间求值（query）</h2><p>区间求值时，我们进行了询问，而因为$lazytag$的原因，在求值之前，需先进行$pushdown$操作</p>
+<figure class="highlight cpp hljs"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="hljs-function">LL <span class="hljs-title">getSum</span><span class="hljs-params">(LL qx,LL qy,LL l,LL r,LL p)</span></span></span><br><span class="line"><span class="hljs-function"></span>&#123;</span><br><span class="line">    LL sum=<span class="hljs-number">0</span>;</span><br><span class="line">    <span class="hljs-keyword">if</span>(qx&lt;=l&amp;&amp;r&lt;=qy)<span class="hljs-keyword">return</span> Tree[p];</span><br><span class="line">    LL mid=(l+r)&gt;&gt;<span class="hljs-number">1</span>;</span><br><span class="line">    put_down(p,l,r);</span><br><span class="line">    <span class="hljs-keyword">if</span>(qx&lt;=mid)sum+=getSum(qx,qy,l,mid,getLeftNum(p));</span><br><span class="line">    <span class="hljs-keyword">if</span>(qy&gt;mid) sum+=getSum(qx,qy,mid+<span class="hljs-number">1</span>,r,getRightNum(p));</span><br><span class="line">    <span class="hljs-keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="END"><a href="#END" class="headerlink" title="END"></a>END</h1>
+        </div>
+        
+        <div class="level is-size-7 is-uppercase">
+            <div class="level-start">
+                <div class="level-item">
+                    <span class="is-size-6 has-text-grey has-mr-7">#</span>
+                    <a class="has-link-grey -link" href="/tags/数据结构/">数据结构</a>, <a class="has-link-grey -link" href="/tags/模版/">模版</a>, <a class="has-link-grey -link" href="/tags/线段树/">线段树</a>
+                </div>
+            </div>
+        </div>
+        
+        
+        
+    </div>
+</div>
+
+
+
+<div class="card">
+    <div class="card-content">
+        <h3 class="menu-label has-text-centered">喜欢这篇文章？打赏一下作者吧</h3>
+        <div class="buttons is-centered">
+            
+                
+<div class="notification is-danger">
+    You forgot to set the <code>qrcode</code> for Alipay. Please set it in <code>_config.yml</code>.
+</div>
+
+                
+        </div>
+    </div>
+</div>
+
+
+
+<div class="card card-transparent">
+    <div class="level post-navigation is-flex-wrap is-mobile">
+        
+        <div class="level-start">
+            <a class="level level-item has-link-grey  article-nav-prev" href="/posts/30408/">
+                <i class="level-item fas fa-chevron-left"></i>
+                <span class="level-item">Segment Tree(ZKW)(PART TWO)</span>
+            </a>
+        </div>
+        
+        
+        <div class="level-end">
+            <a class="level level-item has-link-grey  article-nav-next" href="/posts/57313/">
+                <span class="level-item">最小生成树</span>
+                <i class="level-item fas fa-chevron-right"></i>
+            </a>
+        </div>
+        
+    </div>
+</div>
+
+
+</div>
+                
+
+
+
+
+<div class="column is-4-tablet is-4-desktop is-3-widescreen  has-order-1 column-left ">
+    
+        
+<div class="card widget">
+    <div class="card-content">
+        <nav class="level">
+            <div class="level-item has-text-centered" style="flex-shrink: 1">
+                <div>
+                    
+                        <img class="image is-128x128 has-mb-6" src="/images/avatar.png" alt="MoveCloud">
+                    
+                    
+                    <p class="is-size-4 is-block">
+                        MoveCloud
+                    </p>
+                    
+                    
+                    <p class="is-size-6 is-block">
+                        「Mark Life」
+                    </p>
+                    
+                    
+                    <p class="is-size-6 is-flex is-flex-center has-text-grey">
+                        <i class="fas fa-map-marker-alt has-mr-7"></i>
+                        <span>浙江 温州</span>
+                    </p>
+                    
+                </div>
+            </div>
+        </nav>
+        <nav class="level is-mobile">
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        文章
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        13
+                    </p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        分类
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        0
+                    </p>
+                </div>
+            </div>
+            <div class="level-item has-text-centered is-marginless">
+                <div>
+                    <p class="heading">
+                        标签
+                    </p>
+                    <p class="title has-text-weight-normal">
+                        16
+                    </p>
+                </div>
+            </div>
+        </nav>
+        <div class="level">
+            <a class="level-item button is-link is-rounded" href="https://github.com/movecloudroy" target="_blank">
+                关注我</a>
+        </div>
+        
+        
+        <div class="level is-mobile">
+            
+            <a class="level-item button is-white is-marginless" target="_blank" title="Github" href="https://github.com/movecloudroy">
+                
+                <i class="fab fa-github"></i>
+                
+            </a>
+            
+            <a class="level-item button is-white is-marginless" target="_blank" title="RSS" href="/">
+                
+                <i class="fas fa-rss"></i>
+                
+            </a>
+            
+        </div>
+        
+    </div>
+</div>
+    
+        
+    
+        
+
+<div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+        <h3 class="menu-label">
+            链接
+        </h3>
+        <ul class="menu-list">
+        
+            <li>
+                <a class="level is-mobile" href="https://hexo.io" target="_blank">
+                    <span class="level-left">
+                        <span class="level-item">Hexo</span>
+                    </span>
+                    <span class="level-right">
+                        <span class="level-item tag">hexo.io</span>
+                    </span>
+                </a>
+            </li>
+        
+            <li>
+                <a class="level is-mobile" href="https://github.com/movecloudroy" target="_blank">
+                    <span class="level-left">
+                        <span class="level-item">MoveCloud</span>
+                    </span>
+                    <span class="level-right">
+                        <span class="level-item tag">github.com</span>
+                    </span>
+                </a>
+            </li>
+        
+        </ul>
+        </div>
+    </div>
+</div>
+
+
+    
+        
+<div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+            <h3 class="menu-label">
+                分类
+            </h3>
+            <ul class="menu-list">
+            
+            </ul>
+        </div>
+    </div>
+</div>
+    
+        
+<div class="card widget">
+    <div class="card-content">
+        <h3 class="menu-label">
+            标签云
+        </h3>
+        <a href="/tags/AI/" style="font-size: 10px;">AI</a> <a href="/tags/FHQ/" style="font-size: 10px;">FHQ</a> <a href="/tags/GAN/" style="font-size: 10px;">GAN</a> <a href="/tags/STL/" style="font-size: 10px;">STL</a> <a href="/tags/ZKW/" style="font-size: 10px;">ZKW</a> <a href="/tags/分块/" style="font-size: 10px;">分块</a> <a href="/tags/平衡树/" style="font-size: 10px;">平衡树</a> <a href="/tags/数据结构/" style="font-size: 20px;">数据结构</a> <a href="/tags/数论/" style="font-size: 10px;">数论</a> <a href="/tags/暴力/" style="font-size: 10px;">暴力</a> <a href="/tags/最小生成树/" style="font-size: 10px;">最小生成树</a> <a href="/tags/模版/" style="font-size: 20px;">模版</a> <a href="/tags/线段树/" style="font-size: 15px;">线段树</a> <a href="/tags/经验/" style="font-size: 15px;">经验</a> <a href="/tags/英语/" style="font-size: 10px;">英语</a> <a href="/tags/题解/" style="font-size: 15px;">题解</a>
+    </div>
+</div>
+
+    
+    
+        <div class="column-right-shadow is-hidden-widescreen ">
+        
+            
+<div class="card widget">
+    <div class="card-content">
+        <h3 class="menu-label">
+            最新文章
+        </h3>
+        
+        <article class="media">
+            
+            <a href="/posts/683983/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="英语语法">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2020-03-16T06:30:45.000Z">2020-03-16</time></div>
+                    <a href="/posts/683983/" class="has-link-black-ter is-size-6">英语语法</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/1243066710/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="Hello World">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-07-05T15:36:25.177Z">2019-07-05</time></div>
+                    <a href="/posts/1243066710/" class="has-link-black-ter is-size-6">Hello World</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/10000/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="CycleGAN">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-03-14T09:12:58.000Z">2019-03-14</time></div>
+                    <a href="/posts/10000/" class="has-link-black-ter is-size-6">CycleGAN</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/1138517949/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="树的直径-题解">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-11-01T05:18:01.000Z">2018-11-01</time></div>
+                    <a href="/posts/1138517949/" class="has-link-black-ter is-size-6">树的直径-题解</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/2952530072/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="树上差分-题解">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-10-31T23:52:39.000Z">2018-11-01</time></div>
+                    <a href="/posts/2952530072/" class="has-link-black-ter is-size-6">树上差分-题解</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+    </div>
+</div>
+
+        
+            <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+        <h3 class="menu-label">
+            归档
+        </h3>
+        <ul class="menu-list">
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2020/03/">
+                <span class="level-start">
+                    <span class="level-item">三月 2020</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2019/07/">
+                <span class="level-start">
+                    <span class="level-item">七月 2019</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2019/03/">
+                <span class="level-start">
+                    <span class="level-item">三月 2019</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/11/">
+                <span class="level-start">
+                    <span class="level-item">十一月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">2</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/09/">
+                <span class="level-start">
+                    <span class="level-item">九月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">2</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/08/">
+                <span class="level-start">
+                    <span class="level-item">八月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/07/">
+                <span class="level-start">
+                    <span class="level-item">七月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">5</span>
+                </span>
+            </a>
+        </li>
+        
+        </ul>
+        </div>
+    </div>
+</div>
+        
+            <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+            <h3 class="menu-label">
+                标签
+            </h3>
+            <div class="field is-grouped is-grouped-multiline">
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/AI/">
+                        <span class="tag">AI</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/FHQ/">
+                        <span class="tag">FHQ</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/GAN/">
+                        <span class="tag">GAN</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/STL/">
+                        <span class="tag">STL</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/ZKW/">
+                        <span class="tag">ZKW</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/分块/">
+                        <span class="tag">分块</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/平衡树/">
+                        <span class="tag">平衡树</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/数据结构/">
+                        <span class="tag">数据结构</span>
+                        <span class="tag is-grey">5</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/数论/">
+                        <span class="tag">数论</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/暴力/">
+                        <span class="tag">暴力</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/最小生成树/">
+                        <span class="tag">最小生成树</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/模版/">
+                        <span class="tag">模版</span>
+                        <span class="tag is-grey">5</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/线段树/">
+                        <span class="tag">线段树</span>
+                        <span class="tag is-grey">2</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/经验/">
+                        <span class="tag">经验</span>
+                        <span class="tag is-grey">2</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/英语/">
+                        <span class="tag">英语</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/题解/">
+                        <span class="tag">题解</span>
+                        <span class="tag is-grey">2</span>
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+        
+        </div>
+    
+</div>
+
+                
+
+
+
+
+<div class="column is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only has-order-3 column-right ">
+    
+        
+<div class="card widget">
+    <div class="card-content">
+        <h3 class="menu-label">
+            最新文章
+        </h3>
+        
+        <article class="media">
+            
+            <a href="/posts/683983/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="英语语法">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2020-03-16T06:30:45.000Z">2020-03-16</time></div>
+                    <a href="/posts/683983/" class="has-link-black-ter is-size-6">英语语法</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/1243066710/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="Hello World">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-07-05T15:36:25.177Z">2019-07-05</time></div>
+                    <a href="/posts/1243066710/" class="has-link-black-ter is-size-6">Hello World</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/10000/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="CycleGAN">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2019-03-14T09:12:58.000Z">2019-03-14</time></div>
+                    <a href="/posts/10000/" class="has-link-black-ter is-size-6">CycleGAN</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/1138517949/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="树的直径-题解">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-11-01T05:18:01.000Z">2018-11-01</time></div>
+                    <a href="/posts/1138517949/" class="has-link-black-ter is-size-6">树的直径-题解</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+        <article class="media">
+            
+            <a href="/posts/2952530072/" class="media-left">
+                <p class="image is-64x64">
+                    <img class="thumbnail" src="/images/thumbnail.svg" alt="树上差分-题解">
+                </p>
+            </a>
+            
+            <div class="media-content">
+                <div class="content">
+                    <div><time class="has-text-grey is-size-7 is-uppercase" datetime="2018-10-31T23:52:39.000Z">2018-11-01</time></div>
+                    <a href="/posts/2952530072/" class="has-link-black-ter is-size-6">树上差分-题解</a>
+                    <p class="is-size-7 is-uppercase">
+                        
+                    </p>
+                </div>
+            </div>
+        </article>
+        
+    </div>
+</div>
+
+    
+        <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+        <h3 class="menu-label">
+            归档
+        </h3>
+        <ul class="menu-list">
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2020/03/">
+                <span class="level-start">
+                    <span class="level-item">三月 2020</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2019/07/">
+                <span class="level-start">
+                    <span class="level-item">七月 2019</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2019/03/">
+                <span class="level-start">
+                    <span class="level-item">三月 2019</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/11/">
+                <span class="level-start">
+                    <span class="level-item">十一月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">2</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/09/">
+                <span class="level-start">
+                    <span class="level-item">九月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">2</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/08/">
+                <span class="level-start">
+                    <span class="level-item">八月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">1</span>
+                </span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="level is-marginless" href="/archives/2018/07/">
+                <span class="level-start">
+                    <span class="level-item">七月 2018</span>
+                </span>
+                <span class="level-end">
+                    <span class="level-item tag">5</span>
+                </span>
+            </a>
+        </li>
+        
+        </ul>
+        </div>
+    </div>
+</div>
+    
+        <div class="card widget">
+    <div class="card-content">
+        <div class="menu">
+            <h3 class="menu-label">
+                标签
+            </h3>
+            <div class="field is-grouped is-grouped-multiline">
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/AI/">
+                        <span class="tag">AI</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/FHQ/">
+                        <span class="tag">FHQ</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/GAN/">
+                        <span class="tag">GAN</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/STL/">
+                        <span class="tag">STL</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/ZKW/">
+                        <span class="tag">ZKW</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/分块/">
+                        <span class="tag">分块</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/平衡树/">
+                        <span class="tag">平衡树</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/数据结构/">
+                        <span class="tag">数据结构</span>
+                        <span class="tag is-grey">5</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/数论/">
+                        <span class="tag">数论</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/暴力/">
+                        <span class="tag">暴力</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/最小生成树/">
+                        <span class="tag">最小生成树</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/模版/">
+                        <span class="tag">模版</span>
+                        <span class="tag is-grey">5</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/线段树/">
+                        <span class="tag">线段树</span>
+                        <span class="tag is-grey">2</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/经验/">
+                        <span class="tag">经验</span>
+                        <span class="tag is-grey">2</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/英语/">
+                        <span class="tag">英语</span>
+                        <span class="tag is-grey">1</span>
+                    </a>
+                </div>
+                
+                <div class="control">
+                    <a class="tags has-addons" href="/tags/题解/">
+                        <span class="tag">题解</span>
+                        <span class="tag is-grey">2</span>
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+    
+    
+</div>
+
+            </div>
+        </div>
+    </section>
+    <footer class="footer">
+    <div class="container">
+        <div class="level">
+            <div class="level-start has-text-centered-mobile">
+                <a class="footer-logo is-block has-mb-6" href="/">
+                
+                    <img src="/images/logo.svg" alt="Segment Tree (PART ONE)" height="28">
+                
+                </a>
+                <p class="is-size-7">
+                &copy; 2020 ROY1994&nbsp;
+                Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> & <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank">Icarus</a>
+                
+                </p>
+            </div>
+            <div class="level-end">
+            
+                <div class="field has-addons is-flex-center-mobile has-mt-5-mobile is-flex-wrap is-flex-middle">
+                
+                
+                <p class="control">
+                    <a class="button is-white is-large" target="_blank" title="Creative Commons" href="https://creativecommons.org/">
+                        
+                        <i class="fab fa-creative-commons"></i>
+                        
+                    </a>
+                </p>
+                
+                <p class="control">
+                    <a class="button is-white is-large" target="_blank" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/">
+                        
+                        <i class="fab fa-creative-commons-by"></i>
+                        
+                    </a>
+                </p>
+                
+                <p class="control">
+                    <a class="button is-white is-large" target="_blank" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus">
+                        
+                        <i class="fab fa-github"></i>
+                        
+                    </a>
+                </p>
+                
+                </div>
+            
+            </div>
+        </div>
+    </div>
+</footer>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script>
+<script>moment.locale("zh-CN");</script>
+
+
+    
+    
+    
+    <script src="/js/animation.js"></script>
+    
+
+    
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script>
+    <script src="/js/gallery.js" defer></script>
+    
+
+    
+    
+
+<div id="outdated">
+    <h6>Your browser is out-of-date!</h6>
+    <p>Update your browser to view this website correctly. <a id="btnUpdateBrowser" href="http://outdatedbrowser.com/">Update
+            my browser now </a></p>
+    <p class="last"><a href="#" id="btnCloseUpdateBrowser" title="Close">&times;</a></p>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/outdatedbrowser@1.1.5/outdatedbrowser/outdatedbrowser.min.js" defer></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        outdatedBrowser({
+            bgColor: '#f25648',
+            color: '#ffffff',
+            lowerThan: 'flex'
+        });
+    });
+</script>
+
+
+    
+    
+<script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.5/unpacked/MathJax.js?config=TeX-MML-AM_CHTML" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    MathJax.Hub.Config({
+        'HTML-CSS': {
+            matchFontHeight: false
+        },
+        SVG: {
+            matchFontHeight: false
+        },
+        CommonHTML: {
+            matchFontHeight: false
+        },
+        tex2jax: {
+            inlineMath: [
+                ['$','$'],
+                ['\\(','\\)']
+            ]
+        }
+    });
+});
+</script>
+
+    
+    
+
+<a id="back-to-top" title="回到顶端" href="javascript:;">
+    <i class="fas fa-chevron-up"></i>
+</a>
+<script src="/js/back-to-top.js" defer></script>
+
+
+    
+    
+
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script>
+    <script src="/js/clipboard.js" defer></script>
+    
+
+    
+    
+    
+
+
+<script src="/js/main.js" defer></script>
+
+    
+    <div class="searchbox ins-search">
+    <div class="searchbox-container ins-search-container">
+        <div class="searchbox-input-wrapper">
+            <input type="text" class="searchbox-input ins-search-input" placeholder="想要查找什么...">
+            <span class="searchbox-close ins-close ins-selectable"><i class="fa fa-times-circle"></i></span>
+        </div>
+        <div class="searchbox-result-wrapper ins-section-wrapper">
+            <div class="ins-section-container"></div>
+        </div>
+    </div>
+</div>
+<script>
+    (function (window) {
+        var INSIGHT_CONFIG = {
+            TRANSLATION: {
+                POSTS: '文章',
+                PAGES: '页面',
+                CATEGORIES: '分类',
+                TAGS: '标签',
+                UNTITLED: '(无标题)',
+            },
+            CONTENT_URL: '/content.json',
+        };
+        window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+    })(window);
+</script>
+<script src="/js/insight.js" defer></script>
+<link rel="stylesheet" href="/css/search.css">
+<link rel="stylesheet" href="/css/insight.css">
+    
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"live2d-widget-model-wanko"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"log":false});</script></body>
+</html>
